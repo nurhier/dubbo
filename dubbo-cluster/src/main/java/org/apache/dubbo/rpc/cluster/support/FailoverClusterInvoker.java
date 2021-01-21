@@ -42,7 +42,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
  * Note that retry causes latency.
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Failover">Failover</a>
- *
+ * 当invoker失败，则重试其他invoker
  */
 public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -56,28 +56,28 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         List<Invoker<T>> copyInvokers = invokers;
-        checkInvokers(copyInvokers, invocation);
-        String methodName = RpcUtils.getMethodName(invocation);
-        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
+        checkInvokers(copyInvokers, invocation); // 校验invokers 是否为空，空或者没有数据则抛异常
+        String methodName = RpcUtils.getMethodName(invocation); // 获取方法名称
+        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1; //获取重试次数
         if (len <= 0) {
             len = 1;
         }
-        // retry loop.
-        RpcException le = null; // last exception.
-        List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
+        // retry loop. 重试循环.
+        RpcException le = null; // last exception. 保留最后一次异常.
+        List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers. // 存储被选中过的invoker，等于抽象类中的selected
         Set<String> providers = new HashSet<String>(len);
         for (int i = 0; i < len; i++) {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
             if (i > 0) {
                 checkWhetherDestroyed();
-                copyInvokers = list(invocation);
+                copyInvokers = list(invocation); // 重试时，获取最新的invoker列表
                 // check again
                 checkInvokers(copyInvokers, invocation);
             }
-            Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
-            invoked.add(invoker);
-            RpcContext.getContext().setInvokers((List) invoked);
+            Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked); // 根据负载均衡策略、粘着性、可用性、被选中性、循环选中性等特性选择invoker
+            invoked.add(invoker); // 添加到被选中过的invoker数组中，selected
+            RpcContext.getContext().setInvokers((List) invoked); //设置被选中的invoker列表到 RpcContext 上下文中
             try {
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {
