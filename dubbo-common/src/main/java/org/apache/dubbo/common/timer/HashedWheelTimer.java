@@ -105,14 +105,14 @@ public class HashedWheelTimer implements Timer {
     @SuppressWarnings({"unused", "FieldMayBeFinal"})
     private volatile int workerState;
 
-    private final long tickDuration;
+    private final long tickDuration; // 扇形块的时间间隔
     private final HashedWheelBucket[] wheel;
     private final int mask;
     private final CountDownLatch startTimeInitialized = new CountDownLatch(1);
     private final Queue<HashedWheelTimeout> timeouts = new LinkedBlockingQueue<>();
     private final Queue<HashedWheelTimeout> cancelledTimeouts = new LinkedBlockingQueue<>();
-    private final AtomicLong pendingTimeouts = new AtomicLong(0);
-    private final long maxPendingTimeouts;
+    private final AtomicLong pendingTimeouts = new AtomicLong(0); // 等待执行任务数
+    private final long maxPendingTimeouts; // 最大等待执行任务数
 
     private volatile long startTime;
 

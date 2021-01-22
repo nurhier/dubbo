@@ -43,7 +43,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.FAIL_BACK_TASKS_KEY;
 /**
  * When fails, record failure requests and schedule for retry on a regular interval.
  * Especially useful for services of notification.
- *
+ * 失败定时重试，2018/12/25改为时间轮定时任务
  * <a href="http://en.wikipedia.org/wiki/Failback">Failback</a>
  */
 public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
@@ -61,9 +61,9 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
     public FailbackClusterInvoker(Directory<T> directory) {
         super(directory);
 
-        int retriesConfig = getUrl().getParameter(RETRIES_KEY, DEFAULT_FAILBACK_TIMES);
+        int retriesConfig = getUrl().getParameter(RETRIES_KEY, DEFAULT_FAILBACK_TIMES); // 重试次数
         if (retriesConfig <= 0) {
-            retriesConfig = DEFAULT_FAILBACK_TIMES;
+            retriesConfig = DEFAULT_FAILBACK_TIMES; // 默认重试次数3次
         }
         int failbackTasksConfig = getUrl().getParameter(FAIL_BACK_TASKS_KEY, DEFAULT_FAILBACK_TASKS);
         if (failbackTasksConfig <= 0) {
@@ -75,8 +75,8 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private void addFailed(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker) {
         if (failTimer == null) {
-            synchronized (this) {
-                if (failTimer == null) {
+            synchronized (this) { //同步锁，并双重检测
+                if (failTimer == null) { // 时间轮定时算法
                     failTimer = new HashedWheelTimer(
                             new NamedThreadFactory("failback-cluster-timer", true),
                             1,
@@ -96,13 +96,13 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
     protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         Invoker<T> invoker = null;
         try {
-            checkInvokers(invokers, invocation);
+            checkInvokers(invokers, invocation); // 与failover和failfast不同，failback的invokers列表校验和invoker选择放到try中
             invoker = select(loadbalance, invocation, invokers, null);
             return invoker.invoke(invocation);
         } catch (Throwable e) {
             logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "
                     + e.getMessage() + ", ", e);
-            addFailed(loadbalance, invocation, invokers, invoker);
+            addFailed(loadbalance, invocation, invokers, invoker); // 处理调用失败的invoker
             return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation); // ignore
         }
     }

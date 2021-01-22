@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Execute exactly once, which means this policy will throw an exception immediately in case of an invocation error.
  * Usually used for non-idempotent write operations
- *
+ * 快速失败，调用异常后直接抛出 RpcException异常
  * <a href="http://en.wikipedia.org/wiki/Fail-fast">Fail-fast</a>
  *
  */

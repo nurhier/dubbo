@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * BroadcastClusterInvoker
- *
+ * 广播调用所有可用invoker服务，由于是广播是，所以不用负载均衡。其中一个调用出现异常不会终止后续调用，最后会抛出最后一个异常
  */
 public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
