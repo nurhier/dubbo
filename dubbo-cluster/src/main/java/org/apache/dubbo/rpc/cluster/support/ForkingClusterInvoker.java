@@ -81,8 +81,8 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
             RpcContext.getContext().setInvokers((List) selected);
             final AtomicInteger count = new AtomicInteger();
-            final BlockingQueue<Object> ref = new LinkedBlockingQueue<>();
-            for (final Invoker<T> invoker : selected) {
+            final BlockingQueue<Object> ref = new LinkedBlockingQueue<>(); // 阻塞队列
+            for (final Invoker<T> invoker : selected) { // 循环异步多线程调用选中的invokers，并将结果放入阻塞队列
                 executor.execute(() -> {
                     try {
                         Result result = invoker.invoke(invocation);
@@ -96,7 +96,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 });
             }
             try {
-                Object ret = ref.poll(timeout, TimeUnit.MILLISECONDS);
+                Object ret = ref.poll(timeout, TimeUnit.MILLISECONDS); //阻塞等待第一个返回结果
                 if (ret instanceof Throwable) {
                     Throwable e = (Throwable) ret;
                     throw new RpcException(e instanceof RpcException ? ((RpcException) e).getCode() : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.getMessage(), e.getCause() != null ? e.getCause() : e);
