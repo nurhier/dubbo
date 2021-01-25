@@ -79,7 +79,7 @@ public interface Configurator extends Comparable<Configurator> {
 
         List<Configurator> configurators = new ArrayList<>(urls.size());
         for (URL url : urls) {
-            if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
+            if (EMPTY_PROTOCOL.equals(url.getProtocol())) { // 空协议，则清空configurators列表
                 configurators.clear();
                 break;
             }
@@ -89,9 +89,9 @@ public interface Configurator extends Comparable<Configurator> {
             if (CollectionUtils.isEmptyMap(override)) {
                 continue;
             }
-            configurators.add(configuratorFactory.getConfigurator(url));
+            configurators.add(configuratorFactory.getConfigurator(url)); // 根据url协议从不同工厂获取不同configurator
         }
-        Collections.sort(configurators);
+        Collections.sort(configurators); // 排序，Sort by host, then by priority. 1. the url with a specific host ip should have higher priority than 0.0.0.0; 2. if two url has the same host, compare by priority value；
         return Optional.of(configurators);
     }
 

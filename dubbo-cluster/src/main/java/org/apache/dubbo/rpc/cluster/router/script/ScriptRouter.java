@@ -108,7 +108,7 @@ public class ScriptRouter extends AbstractRouter {
     @Override
     public <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException {
         try {
-            Bindings bindings = createBindings(invokers, invocation);
+            Bindings bindings = createBindings(invokers, invocation); // 脚本函数参数：invokers, invocation, context
             if (function == null) {
                 return invokers;
             }

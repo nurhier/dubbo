@@ -227,17 +227,17 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
     @Override
     public synchronized void notify(List<URL> urls) {
-        Map<String, List<URL>> categoryUrls = urls.stream()
+        Map<String, List<URL>> categoryUrls = urls.stream() /* 按照configurators,routers,providers分成三组*/
                 .filter(Objects::nonNull)
                 .filter(this::isValidCategory)
                 .filter(this::isNotCompatibleFor26x)
                 .collect(Collectors.groupingBy(this::judgeCategory));
 
-        List<URL> configuratorURLs = categoryUrls.getOrDefault(CONFIGURATORS_CATEGORY, Collections.emptyList());
-        this.configurators = Configurator.toConfigurators(configuratorURLs).orElse(this.configurators);
+        List<URL> configuratorURLs = categoryUrls.getOrDefault(CONFIGURATORS_CATEGORY, Collections.emptyList()); // configurator url列表
+        this.configurators = Configurator.toConfigurators(configuratorURLs).orElse(this.configurators); // 根据url protocol协议转换为不同的configurator，并且按照host和priority排序
 
-        List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
-        toRouters(routerURLs).ifPresent(this::addRouters);
+        List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList()); // router url列表
+        toRouters(routerURLs).ifPresent(this::addRouters); // 根据url协议protocol
 
         // providers
         List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
@@ -378,12 +378,12 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
                 continue;
             }
-            String routerType = url.getParameter(ROUTER_KEY);
+            String routerType = url.getParameter(ROUTER_KEY); //router类型
             if (routerType != null && routerType.length() > 0) {
                 url = url.setProtocol(routerType);
             }
             try {
-                Router router = ROUTER_FACTORY.getRouter(url);
+                Router router = ROUTER_FACTORY.getRouter(url); // router factory根据protocol协议获取不同router实现
                 if (!routers.contains(router)) {
                     routers.add(router);
                 }
@@ -675,7 +675,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         return invokers;
     }
 
-    private boolean isValidCategory(URL url) {
+    private boolean isValidCategory(URL url) { // category 是否为其中一个routers、route、providers、configurators、dynamicconfigurators、appdynamicconfigurators
         String category = url.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY);
         if ((ROUTERS_CATEGORY.equals(category) || ROUTE_PROTOCOL.equals(url.getProtocol())) ||
                 PROVIDERS_CATEGORY.equals(category) ||
@@ -688,8 +688,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         return false;
     }
 
-    private boolean isNotCompatibleFor26x(URL url) {
-        return StringUtils.isEmpty(url.getParameter(COMPATIBLE_CONFIG_KEY));
+    private boolean isNotCompatibleFor26x(URL url) { // 是否需要兼容2.6版本
+        return StringUtils.isEmpty(url.getParameter(COMPATIBLE_CONFIG_KEY)); // compatible_config为空无需兼容2.6版本
     }
 
     private void overrideDirectoryUrl() {
