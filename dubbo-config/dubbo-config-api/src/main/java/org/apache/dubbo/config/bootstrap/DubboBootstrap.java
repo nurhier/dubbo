@@ -160,11 +160,11 @@ public class DubboBootstrap extends GenericEventListener {
 
     private volatile boolean referAsync;
 
-    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private AtomicBoolean initialized = new AtomicBoolean(false); //是否已经初始化
 
-    private AtomicBoolean started = new AtomicBoolean(false);
+    private AtomicBoolean started = new AtomicBoolean(false); // 是否已经启动
 
-    private AtomicBoolean ready = new AtomicBoolean(true);
+    private AtomicBoolean ready = new AtomicBoolean(true); // 准备好，启动完成
 
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
@@ -516,18 +516,18 @@ public class DubboBootstrap extends GenericEventListener {
             return;
         }
 
-        ApplicationModel.initFrameworkExts();
+        ApplicationModel.initFrameworkExts(); //初始化框架扩展
 
-        startConfigCenter();
+        startConfigCenter(); //初始化配置中心
 
-        loadRemoteConfigs();
+        loadRemoteConfigs(); //加载远程的配置
 
-        checkGlobalConfigs();
+        checkGlobalConfigs(); // 检查全局配置
 
         // @since 2.7.8
-        startMetadataCenter();
+        startMetadataCenter(); //
 
-        initMetadataService();
+        initMetadataService(); //初始化元数据操作接口
 
         initMetadataServiceExports();
 
@@ -598,9 +598,9 @@ public class DubboBootstrap extends GenericEventListener {
 
     private void startConfigCenter() {
 
-        useRegistryAsConfigCenterIfNecessary();
+        useRegistryAsConfigCenterIfNecessary(); //当注册中心使用zookeeper时，如果配置中心地址没有指定就以注册中心zookeeper作为默认的配置中心
 
-        Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
+        Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters(); //
 
         // check Config Center
         if (CollectionUtils.isEmpty(configCenters)) {
@@ -891,14 +891,14 @@ public class DubboBootstrap extends GenericEventListener {
      * Start the bootstrap
      */
     public DubboBootstrap start() {
-        if (started.compareAndSet(false, true)) {
-            ready.set(false);
+        if (started.compareAndSet(false, true)) { //如果没有启动（started = false），则设置已启动为true，并开始启动流程
+            ready.set(false); // 开始启动，未启动完成，启动中
             initialize();
             if (logger.isInfoEnabled()) {
                 logger.info(NAME + " is starting...");
             }
             // 1. export Dubbo Services
-            exportServices();
+            exportServices(); // 服务提供者端暴露服务
 
             // Not only provider register
             if (!isOnlyRegisterProvider() || hasExportedServices()) {
@@ -1089,19 +1089,19 @@ public class DubboBootstrap extends GenericEventListener {
     private void exportServices() {
         configManager.getServices().forEach(sc -> {
             // TODO, compatible with ServiceConfig.export()
-            ServiceConfig serviceConfig = (ServiceConfig) sc;
+            ServiceConfig serviceConfig = (ServiceConfig) sc; // 先将ServiceBean实例强转成父类ServiceConfig,然后设置这个ServiceBean的bootstrap属性为当前的Bootstrap实例
             serviceConfig.setBootstrap(this);
 
-            if (exportAsync) {
+            if (exportAsync) { // 异步执行服务暴露发布
                 ExecutorService executor = executorRepository.getServiceExporterExecutor();
                 Future<?> future = executor.submit(() -> {
                     sc.export();
-                    exportedServices.add(sc);
+                    exportedServices.add(sc); //记录发布好的服务
                 });
                 asyncExportingFutures.add(future);
             } else {
-                sc.export();
-                exportedServices.add(sc);
+                sc.export(); // 同步发布服务
+                exportedServices.add(sc); //记录发布好的服务
             }
         });
     }

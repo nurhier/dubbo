@@ -190,17 +190,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             bootstrap.initialize();
         }
 
-        checkAndUpdateSubConfigs();
+        checkAndUpdateSubConfigs(); //检查当前发布的服务的配置的子项是否正确
 
         //init serviceMetadata
-        serviceMetadata.setVersion(getVersion());
-        serviceMetadata.setGroup(getGroup());
-        serviceMetadata.setDefaultGroup(getGroup());
-        serviceMetadata.setServiceType(getInterfaceClass());
-        serviceMetadata.setServiceInterfaceName(getInterface());
-        serviceMetadata.setTarget(getRef());
+        serviceMetadata.setVersion(getVersion()); // 设置版本号
+        serviceMetadata.setGroup(getGroup()); // 设置分组
+        serviceMetadata.setDefaultGroup(getGroup()); // 默认分组
+        serviceMetadata.setServiceType(getInterfaceClass()); // 服务类class对象
+        serviceMetadata.setServiceInterfaceName(getInterface()); //服务类名称
+        serviceMetadata.setTarget(getRef()); //
 
-        if (shouldDelay()) {
+        if (shouldDelay()) { // 是否延时
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
             doExport();
@@ -302,16 +302,16 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
-        ServiceRepository repository = ApplicationModel.getServiceRepository();
-        ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
+        ServiceRepository repository = ApplicationModel.getServiceRepository(); //获取一个服务仓库，ServiceRepository的构造函数会默认添加回声测试服务EchoService + 泛化服务GenericService两个服务到当前的服务仓库中。
+        ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass()); // 注册当前所需发布的服务Class到服务仓库 services map中
         repository.registerProvider(
                 getUniqueServiceName(),
                 ref,
                 serviceDescriptor,
                 this,
                 serviceMetadata
-        );
-
+        ); // 注册服务到服务仓库
+        // 获取服务注册与发现的服务URL列表，由于返回是一个集合，因此代表dubbo可支持多注册中心。注意此处返回的URL实例是"registry"协议的，url样例：registry://127.0.0.1:8848/org.apache.dubbo.registry.RegistryService?application=provider&dubbo=2.0.2&pid=16036&qos.enable=false&registry=nacos&release=2.7.8&timestamp=1599662197066, 比如我们配置的是：nacos://127.0.0.1:8848 经过处理后就是样例中的结果。
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         for (ProtocolConfig protocolConfig : protocols) {
@@ -326,7 +326,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
     }
 
-    private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+    private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) { //暴露服务，生成url
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
@@ -442,7 +442,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
-        URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
+        URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map); // 生成url
 
         // You can customize Configurator to append extra parameters
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -485,11 +485,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         if (StringUtils.isNotEmpty(proxy)) {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
-
+                        // 通过代理模式，将url转换为invoker
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
-                        Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+                        Exporter<?> exporter = PROTOCOL.export(wrapperInvoker); // 服务暴露并注册到注册中心，如zookeeper等
                         exporters.add(exporter);
                     }
                 } else {

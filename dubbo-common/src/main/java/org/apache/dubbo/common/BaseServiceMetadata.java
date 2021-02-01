@@ -29,7 +29,7 @@ public class BaseServiceMetadata {
     protected String version;
     protected volatile String group;
 
-    public static String buildServiceKey(String path, String group, String version) {
+    public static String buildServiceKey(String path, String group, String version) { // 拼接group，path， version
         StringBuilder buf = new StringBuilder();
         if (group != null && group.length() > 0) {
             buf.append(group).append("/");
@@ -38,7 +38,7 @@ public class BaseServiceMetadata {
         if (version != null && version.length() > 0) {
             buf.append(":").append(version);
         }
-        return buf.toString();
+        return buf.toString(); // path = "helloService", group = "car", version = "2.0.1"; buf = "car/helloService:2.0.1"
     }
 
     public static String versionFromServiceKey(String serviceKey) {

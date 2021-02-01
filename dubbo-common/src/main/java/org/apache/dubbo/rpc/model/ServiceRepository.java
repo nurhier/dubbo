@@ -118,8 +118,8 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
                                  ServiceMetadata serviceMetadata) {
         ProviderModel providerModel = new ProviderModel(serviceKey, serviceInstance, serviceModel, serviceConfig,
                 serviceMetadata);
-        providers.putIfAbsent(serviceKey, providerModel);
-        providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel);
+        providers.putIfAbsent(serviceKey, providerModel); //key = group + / + interfaceName + : + version
+        providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel); // 去掉分组前缀， key = interfaceName + : + version
     }
 
     private static String keyWithoutGroup(String serviceKey) {
