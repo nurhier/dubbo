@@ -53,7 +53,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
- * DubboInvoker
+ * DubboInvoker 消费端，远程调用dubbo协议
  */
 public class DubboInvoker<T> extends AbstractInvoker<T> {
 
@@ -93,9 +93,9 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
         try {
-            boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
-            int timeout = calculateTimeout(invocation, methodName);
-            if (isOneway) {
+            boolean isOneway = RpcUtils.isOneway(getUrl(), invocation); // 是否无返回值
+            int timeout = calculateTimeout(invocation, methodName); //服务端超时时间
+            if (isOneway) { //无返回值
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);

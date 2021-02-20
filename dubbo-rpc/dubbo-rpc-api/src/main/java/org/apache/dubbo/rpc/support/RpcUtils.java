@@ -198,7 +198,7 @@ public class RpcUtils {
         }
     }
 
-    public static boolean isOneway(URL url, Invocation inv) {
+    public static boolean isOneway(URL url, Invocation inv) { // 是否不需要返回值
         boolean isOneway;
         if (Boolean.FALSE.toString().equals(inv.getAttachment(RETURN_KEY))) {
             isOneway = true;

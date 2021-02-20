@@ -88,7 +88,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.SHARE_CONNECTIONS_KE
 
 
 /**
- * dubbo protocol support.
+ * dubbo protocol support. //服务端，接收请求入口
  */
 public class DubboProtocol extends AbstractProtocol {
 

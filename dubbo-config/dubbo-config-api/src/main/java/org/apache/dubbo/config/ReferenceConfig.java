@@ -302,7 +302,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         serviceMetadata.getAttachments().putAll(map);
 
-        ref = createProxy(map);
+        ref = createProxy(map); // 创建代理
 
         serviceMetadata.setTarget(ref);
         serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);
@@ -343,7 +343,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                         }
                     }
                 }
-            } else { // assemble URL from register center's configuration
+            } else { // assemble URL from register center's configuration // 从注册中心获取URL
                 // if protocols not injvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     checkRegistry();

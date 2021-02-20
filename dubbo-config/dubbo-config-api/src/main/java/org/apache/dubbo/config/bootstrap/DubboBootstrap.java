@@ -908,7 +908,7 @@ public class DubboBootstrap extends GenericEventListener {
                 registerServiceInstance();
             }
 
-            referServices();
+            referServices(); // 消费者调用服务
             if (asyncExportingFutures.size() > 0) {
                 new Thread(() -> {
                     try {
@@ -1139,7 +1139,7 @@ public class DubboBootstrap extends GenericEventListener {
                     );
                     asyncReferringFutures.add(future);
                 } else {
-                    cache.get(rc);
+                    cache.get(rc); //
                 }
             }
         });
